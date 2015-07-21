@@ -1,8 +1,8 @@
 
 import sys, os, re
-from HTMLParser import HTMLParser
 import urllib, urllib2
-
+from HTMLParser import HTMLParser
+from ConfigParser import SafeConfigParser
 
 class PbsHTMLParser(HTMLParser):
     def init(self, url, prefix):
@@ -37,8 +37,10 @@ class PbsHTMLParser(HTMLParser):
                     self.mp3 = v;
 
     def down_mp3(self):
+        print 'Downloading ' + self.mp3_downloaded + ' ...... ',
         if self.mp3:
             urllib.urlretrieve(self.mp3, filename = self.mp3_downloaded)
+        print 'Done'
 
     def load(self):
         urllib.urlretrieve(self.pbs_url, self.in_file)
@@ -56,15 +58,16 @@ class PbsHTMLParser(HTMLParser):
       
         
 class PbsCrawler():
-    def __init__(self):
-        self.pbs_url = 'http://www.pbs.org/newshour/bb/great-day-beach-stranded-great-white-shark/'
-        self.prefix = 'great-day-beach-stranded-great-white-shark'
-
     def run(self):
-        self.parser = PbsHTMLParser()
-        self.parser.init(self.pbs_url, self.prefix)
-        self.parser.load()
-
+        config_parser = SafeConfigParser()
+        config_parser.read('pbs.ini')
+        str_pbs_url = config_parser.get('pbs_source', 'pbs_url')
+        list_pbs_url = eval(str_pbs_url)
+        for url in list_pbs_url:
+            prefix = url.split('/')[-2]
+            pbs_parser = PbsHTMLParser()
+            pbs_parser.init(url, prefix)
+            pbs_parser.load()
 
 if __name__ == '__main__':
     PbsCrawler().run()
